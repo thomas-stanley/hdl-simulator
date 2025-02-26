@@ -6,7 +6,8 @@ class HDLParser:
         self.filename = filename
         self.modules = {}  # Dictionary for parsed modules
 
-    def parse(self):  # Need to add functionality for comments within the hdl file and for hdl files being able to include other hdl files
+    # Need to sanitise the input file to remove comments, check for syntax errors, check for missing modules, insure there are no brackets in variable names
+    def parse(self):  # Need to add functionality for hdl files being able to include other hdl files
         # Reads HDL file and parses it by extracting module definitions
         with open(self.filename, "r") as file:
             content = file.read()
