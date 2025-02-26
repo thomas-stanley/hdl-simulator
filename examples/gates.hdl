@@ -1,0 +1,25 @@
+MODULE Nand(a, b -> out)
+    out = !(a & b);
+END
+
+MODULE Not(a -> out)
+    out = Nand(a, a);
+END
+
+MODULE And(a, b -> out)
+    nand_ab = Nand(a, b);
+    out = Not(nand_ab);
+END
+
+MODULE Or(a, b -> out)
+    not_a = Not(a);
+    not_b = Not(b);
+    out = Nand(not_a, not_b);
+END
+
+MODULE Xor(a, b -> out)
+    nand_ab = Nand(a, b);
+    nand_a = Nand(a, nand_ab);
+    nand_b = Nand(nand_ab, b);
+    out = Nand(nand_a, nand_b);
+END
