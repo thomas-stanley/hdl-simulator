@@ -1,7 +1,3 @@
-MODULE Nand(a, b -> out)
-    out = !(a & b);
-END
-
 MODULE Not(a -> out)
     out = Nand(a, a);
 END
