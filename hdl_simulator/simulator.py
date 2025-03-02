@@ -25,7 +25,7 @@ class CircuitSimulator:
 
         module = self.modules[module_name]
         input_variables = module["inputs"]
-        output_variables = module["outputs"]
+        # output_variables = module["outputs"] This will need to be sorted out when there are multiple outputs
         logic = module["body"]
         variables = inputs.copy()
 
