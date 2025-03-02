@@ -1,37 +1,54 @@
-import re
+from lark import Lark, Transformer
+from module import Module
 
-class HDLParser:
-    def __init__(self, filename):
-        # Initialise with a HDL file path
-        self.filename = filename
-        self.modules = {}  # Dictionary for parsed modules
+hdl_grammar = """
+    start: module+
+    module: "MODULE" NAME "(" args "->" args ")" expr+ "END"
+    args: NAME ("," NAME)*
+    expr: NAME "=" function_call ";"
+    function_call: NAME "(" args ")"
+    NAME: /[a-zA-Z_][a-zA-Z0-9_]*/
+    %import common.WS
+    %ignore WS
+"""
 
-    # Need to sanitise the input file to remove comments, check for syntax errors, check for missing modules, insure there are no brackets in variable names
-    def parse(self):  # Need to add functionality for hdl files being able to include other hdl files
-        # Reads HDL file and parses it by extracting module definitions
-        with open(self.filename, "r") as file:
-            content = file.read()
-        module_pattern = re.findall(r"MODULE (\w+)\((.*?) -> (.*?)\)(.*?)END", content, re.DOTALL)  # \( and \) match literal parentheses
-        for module in module_pattern:
-            name, inputs, outputs, body = module
+hdl_parser = Lark(hdl_grammar, parser="lalr")  # lalr is an efficient parser for this kind of text
 
-            input_list = [module_input.strip() for module_input in inputs.split(",")]  # Separates the inputs
-            output_list = [module_output.strip() for module_output in outputs.split(",")]  # Separates the outputs
+class HDLTransformer(Transformer):
 
-            body_statements = re.findall(r"(\w+)\s*=\s*(.+);", body)  # Extracts the body statements and separates them into a list of tuples
+    def start(self, modules):
+        return modules  # Currently warps it in a list even if there is only one of them but this seems to be fine for the time being
 
-            self.modules[name] = {
-                "inputs": input_list,
-                "outputs": output_list,
-                "body": body_statements
-            }
-            # print(body_statements) 
-        return self.modules
+    def module(self, items):
+        name, inputs, outputs, *body = items
+        return Module(name, inputs, outputs, body)
+    
+    def expr(self, items):
+        output_variable, function_call = items
+        return (output_variable, function_call)  # Expressions stored as tuples
+    
+    def function_call(self, items):
+        module_name, arguments = items  # May need to switch to *arguments if things stop working
+        return {"module": module_name, "args": arguments}
+
+    def args(self, items):
+        return items
+    
+    def NAME(self, token):
+        return token.value
+
+def parse_hdl(filename):
+    with open(filename, "r") as file:
+        text = file.read()
+    tree = hdl_parser.parse(text)  # Hdl text parsed into tree
+    transformer = HDLTransformer()  # Create transformer
+    return transformer.transform(tree)  # Tree to dictionary
+
 
 def main():
-    parser = HDLParser("examples/gates.hdl")
-    modules = parser.parse()
-    print(modules)
+    modules = parse_hdl("examples/gates.hdl")
+    for module in modules:
+        print(module)
 
 if __name__ == "__main__":
     main()
