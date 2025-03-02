@@ -37,7 +37,7 @@ class HDLTransformer(Transformer):
     def NAME(self, token):
         return token.value
 
-def parse_hdl(filename):
+def parse_hdl(filename):  # Might be worth rewriting as a class
     with open(filename, "r") as file:
         text = file.read()
     tree = hdl_parser.parse(text)  # Hdl text parsed into tree
