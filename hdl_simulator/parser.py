@@ -1,5 +1,5 @@
 from lark import Lark, Transformer
-from module import Module
+from .module import Module
 
 hdl_grammar = """
     start: module+
