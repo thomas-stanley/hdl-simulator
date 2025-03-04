@@ -4,7 +4,7 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from hdl_simulator import CircuitSimulator, parse_hdl
+from hdl_simulator import CircuitSimulator
 
 @pytest.fixture(scope="module")
 def simulator():  # So I only have to create an instance once
