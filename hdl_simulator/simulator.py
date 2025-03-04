@@ -1,4 +1,4 @@
-from parser import parse_hdl
+from .parser import parse_hdl
 
 class CircuitSimulator:
     def __init__(self, filename):
