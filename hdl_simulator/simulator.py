@@ -11,48 +11,50 @@ class CircuitSimulator:
             if len(inputs) != 2:
                 raise ValueError(f"Expected 2 inputs for {module_name} module, got {len(inputs)}.")
             return {"out": int(not(inputs["a"] and inputs["b"]))}
-            
+
         if module_name not in self.modules:
             raise ValueError(f"Module {module_name} not found.")
         
-        return {"out": self.evaluate_module(module_name, inputs)}
+        return self.evaluate_module(module_name, inputs)
     
     def evaluate_module(self, module_name, inputs):
-        if len(inputs) == 1:  # Fixes a bug that occurred when the only input for the not module was "b" and not "a" so was not able to be processed
-            inputs = {"a": tuple(inputs.values())[0]}
 
         module = self.modules[module_name]
-        input_variables = module.inputs
-        # output_variables = module["outputs"] This will need to be sorted out when there are multiple outputs
         logic = module.body
         variables = inputs.copy()
 
-        if len(input_variables) != len(inputs):
-            raise ValueError(f"Expected {len(input_variables)} inputs for {module_name} module, got {len(inputs)}.")
+        queue = list(logic)
 
-        for line in logic:
-            variable, expression = line
-            function = expression["module"]
-            arguments = expression["args"]
+        while queue:  # While there are still unresolved expressions
+            remaining_queue = []  # Unresolved expressions
 
-            if "Nand" == function:
-                variables[variable] = int(not (variables[arguments[0]] and variables[arguments[1]]))
-            else:
-                variables[variable] = self.evaluate_module(function, {arg: variables[arg] for arg in arguments})
-        
-        return variables["out"]
+            for variable, expression in queue:
+                function = expression["module"]
+                arguments = expression["args"]
+
+                if all(arg in variables for arg in arguments):  # If the function can be calculated with the known variables (initially the variables specified by the user)
+                    if function == "Nand":
+                        variables[variable] = int(not (variables[arguments[0]] and variables[arguments[1]]))  # Calculates the nand gate for the current variable in the queue
+                    else:
+                        alphabet = "abcdefghijklmnopqrstuvwxyz"  # jerry rigged way to fix issue with arguments and variable mismatch
+                        sub_inputs = {alphabet[arg_index]: variables[arg] for arg_index, arg in enumerate(arguments)}  # Stores relevant arguments for the submodule
+                        sub_outputs = self.evaluate_module(function, sub_inputs)  # Run the evaluation on the submodule
+                        variables.update(sub_outputs)  # Add the submodule output to the found variables
+            queue = []
+            """
+                else:
+                    remaining_queue.append(variable, expression)
+            """
+        return {out: variables[out] for out in module.outputs}                          
 
 
 
 def main():
-    simulator = CircuitSimulator("examples/gates.hdl")
-    inputs = {"a": 1, "b": 0}
+    test_simulator = CircuitSimulator("examples/gates.hdl")
+    inputs = {"a": 0, "b": 0}
     # inputs = {"a": 0}
-    outputs = simulator.evaluate("And", inputs)  # Need to write some tests for this to speed up debugging
+    outputs = test_simulator.evaluate("And", inputs)  # Need to write some tests for this to speed up debugging
     print(outputs)
-
-if __name__ == "__main__":
-    main()
         
 
         
