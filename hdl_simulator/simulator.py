@@ -10,8 +10,8 @@ class CircuitSimulator:
         if module_name == "Nand":
             if len(inputs) != 2:
                 raise ValueError(f"Expected 2 inputs for {module_name} module, got {len(inputs)}.")
-
             return {"out": int(not(inputs["a"] and inputs["b"]))}
+            
         if module_name not in self.modules:
             raise ValueError(f"Module {module_name} not found.")
         
