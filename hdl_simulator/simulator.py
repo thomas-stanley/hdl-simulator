@@ -39,6 +39,7 @@ class CircuitSimulator:
                         alphabet = "abcdefghijklmnopqrstuvwxyz"  # jerry rigged way to fix issue with arguments and variable mismatch
                         sub_inputs = {alphabet[arg_index]: variables[arg] for arg_index, arg in enumerate(arguments)}  # Stores relevant arguments for the submodule
                         sub_outputs = self.evaluate_module(function, sub_inputs)  # Run the evaluation on the submodule
+                        # Need to sort out names
                         variables.update(sub_outputs)  # Add the submodule output to the found variables
             queue = []
             """
@@ -51,9 +52,9 @@ class CircuitSimulator:
 
 def main():
     test_simulator = CircuitSimulator("examples/gates.hdl")
-    inputs = {"a": 0, "b": 0}
+    inputs = {"a": 1, "b": 0}
     # inputs = {"a": 0}
-    outputs = test_simulator.evaluate("And", inputs)  # Need to write some tests for this to speed up debugging
+    outputs = test_simulator.evaluate("Or", inputs)  # Need to write some tests for this to speed up debugging
     print(outputs)
         
 
