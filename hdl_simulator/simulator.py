@@ -20,41 +20,29 @@ class CircuitSimulator:
     def evaluate_module(self, module_name, inputs):
 
         module = self.modules[module_name]
-        logic = module.body
         variables = inputs.copy()
 
-        queue = list(logic)
+        for variable, expression in module.body:
+            function = expression["module"]
+            arguments = expression["args"]
 
-        while queue:  # While there are still unresolved expressions
-            remaining_queue = []  # Unresolved expressions
-
-            for variable, expression in queue:
-                function = expression["module"]
-                arguments = expression["args"]
-
-                if all(arg in variables for arg in arguments):  # If the function can be calculated with the known variables (initially the variables specified by the user)
-                    if function == "Nand":
-                        variables[variable] = int(not (variables[arguments[0]] and variables[arguments[1]]))  # Calculates the nand gate for the current variable in the queue
-                    else:
-                        alphabet = "abcdefghijklmnopqrstuvwxyz"  # jerry rigged way to fix issue with arguments and variable mismatch
-                        sub_inputs = {alphabet[arg_index]: variables[arg] for arg_index, arg in enumerate(arguments)}  # Stores relevant arguments for the submodule
-                        sub_outputs = self.evaluate_module(function, sub_inputs)  # Run the evaluation on the submodule
-                        # Need to sort out names
-                        variables.update(sub_outputs)  # Add the submodule output to the found variables
-            queue = []
-            """
+            if all(arg in variables for arg in arguments):  # If the function can be calculated with the known variables (initially the variables specified by the user)
+                if function == "Nand":
+                    variables[variable] = int(not (variables[arguments[0]] and variables[arguments[1]]))  # Calculates the nand gate for the current variable in the queue
                 else:
-                    remaining_queue.append(variable, expression)
-            """
+                    sub_inputs = {module.inputs[arg_index]: variables[arg] for arg_index, arg in enumerate(arguments)}  # Stores relevant arguments for the submodule
+                    sub_outputs = self.evaluate_module(function, sub_inputs)  # Run the evaluation on the submodule
+                    to_add = {variable: tuple(sub_outputs.values())[0]}  # Currently works due to 1 output
+                
+                    variables.update(to_add)  # Add the submodule output to the found variables
         return {out: variables[out] for out in module.outputs}                          
 
 
 
 def main():
     test_simulator = CircuitSimulator("examples/gates.hdl")
-    inputs = {"a": 1, "b": 0}
-    # inputs = {"a": 0}
-    outputs = test_simulator.evaluate("Or", inputs)  # Need to write some tests for this to speed up debugging
+    inputs = {"a": 0, "b": 1}
+    outputs = test_simulator.evaluate("Or", inputs)
     print(outputs)
         
 
