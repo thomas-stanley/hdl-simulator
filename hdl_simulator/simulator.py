@@ -9,18 +9,29 @@ class CircuitSimulator:
         # Evaluates a module given its name and inputs
         if module_name == "Nand":
             if len(inputs) != 2:
-                raise ValueError(f"Expected 2 inputs for {module_name} module, got {len(inputs)}.")
+                raise ValueError(f"Expected 2 inputs for '{module_name}' module, got {len(inputs)}.")
             return {"out": int(not(inputs["a"] and inputs["b"]))}
 
         if module_name not in self.modules:
-            raise ValueError(f"Module {module_name} not found.")
+            raise ValueError(f"Module '{module_name}' not found.")
+        
+        if not all(isinstance(input_value, int) for input_value in inputs.values()):
+            raise TypeError("Inputs must be integers.")
+
+        if not all(input_value in (0, 1) for input_value in inputs.values()):
+            raise ValueError("Inputs must be 0 or 1.")
         
         return self.evaluate_module(module_name, inputs)
     
     def evaluate_module(self, module_name, inputs):
 
         module = self.modules[module_name]
+        module_inputs = module.inputs
+        module_outputs = module.outputs
         variables = inputs.copy()
+
+        if len(inputs) != len(module_inputs):
+            raise ValueError(f"Expected {module_inputs} for '{module.name}', got {len(inputs)}.")
 
         for variable, expression in module.body:
             function = expression["module"]
@@ -30,12 +41,12 @@ class CircuitSimulator:
                 if function == "Nand":
                     variables[variable] = int(not (variables[arguments[0]] and variables[arguments[1]]))  # Calculates the nand gate for the current variable in the queue
                 else:
-                    sub_inputs = {module.inputs[arg_index]: variables[arg] for arg_index, arg in enumerate(arguments)}  # Stores relevant arguments for the submodule
+                    sub_inputs = {module_inputs[arg_index]: variables[arg] for arg_index, arg in enumerate(arguments)}  # Stores relevant arguments for the submodule
                     sub_outputs = self.evaluate_module(function, sub_inputs)  # Run the evaluation on the submodule
                     to_add = {variable: tuple(sub_outputs.values())[0]}  # Currently works due to 1 output
                 
                     variables.update(to_add)  # Add the submodule output to the found variables
-        return {out: variables[out] for out in module.outputs}                          
+        return {out: variables[out] for out in module_outputs}                          
 
 
 
