@@ -1,9 +1,10 @@
-from .parser import parse_hdl
+from .parser import HDLParser
 
 class CircuitSimulator:
     def __init__(self, filename):
         # Parses the HDL file and initialises the simulator with the parsed modules
-        self.modules = {module.name: module for module in parse_hdl(filename)}  # Parsed modules stored here
+        parser = HDLParser()
+        self.modules = {module.name: module for module in parser.parse(filename)}  # Parsed modules stored here
 
     def evaluate(self, module_name, inputs):
         # Evaluates a module given its name and inputs
@@ -43,7 +44,7 @@ class CircuitSimulator:
                 else:
                     sub_inputs = {module_inputs[arg_index]: variables[arg] for arg_index, arg in enumerate(arguments)}  # Stores relevant arguments for the submodule with the correct name for the submodule that will be called
                     sub_outputs = self.evaluate_module(function, sub_inputs)  # Run the evaluation on the submodule
-                    to_add = {variable: tuple(sub_outputs.values())[0]}  # Currently works only when there is one output
+                    to_add = {variable: output_value for output_value in tuple(sub_outputs.values())}  # Reassigns correct output variable names
                 
                     variables.update(to_add)  # Add the submodule output to the found variables
         return {out: variables[out] for out in module_outputs}                          
