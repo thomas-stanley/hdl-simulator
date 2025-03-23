@@ -15,25 +15,23 @@ hdl_grammar = """
 class HDLTransformer(Transformer):
 
     def start(self, modules):
-        return modules  # Currently warps it in a list even if there is only one of them but this seems to be fine for the time being
+        return modules  # Currently wraps it in a list even if there is only one of them but this seems to be fine for the time being
 
     def module(self, items):
         name, inputs, outputs, *body = items
         return Module(name, inputs, outputs, body)
     
     def expr(self, items):
-        output_variable, function_call = items
-        return (output_variable, function_call)  # Expressions stored as tuples
+        return items[0], items[1] # This may cause some issues down the line, works for now
     
     def function_call(self, items):
-        module_name, arguments = items  # May need to switch to *arguments if things stop working
-        return {"module": module_name, "args": arguments}
+        return {"module": items[0], "args": items[1]}  # This may cause some issues down the line, works for now
 
     def args(self, items):
-        return items
+        return list(items)
     
     def NAME(self, token):
-        return token.value
+        return str(token)
 
 class HDLParser:
     def __init__(self):
