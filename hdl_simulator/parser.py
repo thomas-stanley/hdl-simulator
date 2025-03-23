@@ -12,8 +12,6 @@ hdl_grammar = """
     %ignore WS
 """
 
-hdl_parser = Lark(hdl_grammar, parser="lalr")  # lalr is an efficient parser for this kind of text
-
 class HDLTransformer(Transformer):
 
     def start(self, modules):
@@ -37,16 +35,23 @@ class HDLTransformer(Transformer):
     def NAME(self, token):
         return token.value
 
-def parse_hdl(filename):  # Might be worth rewriting as a class
-    with open(filename, "r") as file:
-        text = file.read()
-    tree = hdl_parser.parse(text)  # Hdl text parsed into tree
-    transformer = HDLTransformer()  # Create transformer
-    return transformer.transform(tree)  # Tree to dictionary
-
+class HDLParser:
+    def __init__(self):
+        self.parser = Lark(hdl_grammar, parser="lalr")
+        self.transformer = HDLTransformer()
+    
+    def parse(self, filename):
+        try:
+            with open(filename, "r") as file:
+                text = file.read()
+            tree = self.parser.parse(text)
+            return self.transformer.transform(tree)
+        except ValueError:
+            raise ValueError(f"File '{filename}' not found.")
 
 def main():
-    modules = parse_hdl("examples/gates.hdl")
+    parser = HDLParser()
+    modules = parser.parse("examples/gates.hdl")
     for module in modules:
         print(module)
 
