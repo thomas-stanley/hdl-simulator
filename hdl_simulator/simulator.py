@@ -16,13 +16,18 @@ class CircuitSimulator:
         if module_name not in self.modules:  # Checks if module is valid (no need to also check if it's nand as that was done earlier)
             raise ValueError(f"Module '{module_name}' not found.")
         
+        self._validate_inputs(inputs, module_name)
+        
+        return self.evaluate_module(module_name, inputs)
+
+
+    def _validate_inputs(self, inputs, module_name):
         if not all(isinstance(input_value, int) for input_value in inputs.values()):  # Checks if inputs are integers
             raise TypeError("Inputs must be integers.")
 
         if not all(input_value in (0, 1) for input_value in inputs.values()):  # Checks if inputs are 0 or 1
-            raise ValueError("Inputs must be 0 or 1.")
-        
-        return self.evaluate_module(module_name, inputs)
+            raise ValueError("Inputs must be either 0 or 1.")
+    
     
     def evaluate_module(self, module_name, inputs):
 
